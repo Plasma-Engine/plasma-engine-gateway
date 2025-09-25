@@ -1,0 +1,19 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint-test:
+    uses: xkonjin/plasma-engine-infra/.github/workflows/lint-test.yml@main
+    with:
+      python: "['3.11']"
+      node: "[]"
+
+  security:
+    uses: xkonjin/plasma-engine-infra/.github/workflows/security-scan.yml@main
+    with:
+      run_npm_audit: false
+
