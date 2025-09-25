@@ -1,29 +1,61 @@
 # Plasma Engine Gateway
 
-FastAPI-based API gateway providing authentication, routing, and shared cross-service APIs for the Plasma Engine platform.
+## Overview
 
-## Status
+**Plasma Engine Gateway** is the unified API gateway and GraphQL federation layer for the Plasma Engine platform. It provides:
 
-- Stack: Python 3.11, FastAPI, SQLModel
-- CI: [Reusable lint/test workflow](.github/workflows/ci.yml)
-- Issue templates, PR template, and CODEOWNERS synced from `plasma-engine-shared`
+- 🚀 **GraphQL Federation**: Unified API across all services
+- 🔐 **Authentication & Authorization**: JWT validation, RBAC, API key management
+- 🌐 **Rate Limiting & Throttling**: Per-user and per-IP controls
+- 📊 **Request Routing**: Smart routing to backend services
+- 🔍 **API Analytics**: Request tracking and performance metrics
+- 🛡️ **Security**: CORS, CSP, input validation
 
-## Getting Started
+## Tech Stack
+
+- **Language**: TypeScript
+- **Framework**: Apollo Server 4.x with Federation
+- **Gateway**: Apollo Gateway
+- **Auth**: Auth0 / Clerk integration
+- **Cache**: Redis for session management
+- **Monitoring**: OpenTelemetry, Prometheus
+
+## Quick Start
 
 ```bash
-git clone https://github.com/xkonjin/plasma-engine-gateway.git
-cd plasma-engine-gateway
+# Install dependencies
+pnpm install
 
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt  # placeholder until scaffolding lands
+# Set up environment
+cp .env.example .env
+
+# Run development server
+pnpm dev
+
+# Run tests
+pnpm test
+
+# Build for production
+pnpm build
 ```
 
-## Development Checklist
+## Architecture
 
-- [ ] Link issues to Program board
-- [ ] Run `make lint` / `pytest` before committing
-- [ ] Add/Update documentation for new endpoints
-- [ ] Ensure CodeRabbit + human review on PRs
+This service acts as the single entry point for all client applications:
 
-See the [Development Handbook](../plasma-engine-shared/docs/development-handbook.md) for environment setup.
+```
+Clients → Gateway → [Research|Brand|Content|Agent] Services
+```
+
+## Development
+
+See [Development Handbook](../plasma-engine-shared/docs/development-handbook.md) for guidelines.
+
+## CI/CD
+
+This repository uses GitHub Actions for CI/CD. All PRs are automatically:
+- Linted and tested
+- Security scanned
+- Reviewed by CodeRabbit
+
+See `.github/workflows/ci.yml` for details.
