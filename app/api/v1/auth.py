@@ -39,7 +39,9 @@ def issue_token(form_data: OAuth2PasswordRequestForm = Depends()) -> TokenRespon
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_credentials")
 
     subject = form_data.username
-    access = create_access_token(subject, extra_claims={"scopes": form_data.scopes})
+    # Simple role assignment for demo: 'admin' username gets admin role.
+    roles = ["admin"] if subject == "admin" else ["viewer"]
+    access = create_access_token(subject, extra_claims={"scopes": form_data.scopes, "roles": roles})
     refresh = create_refresh_token(subject)
 
     r = get_redis_client()
