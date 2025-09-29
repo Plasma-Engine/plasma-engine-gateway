@@ -25,6 +25,11 @@ from prometheus_client import CONTENT_TYPE_LATEST, CollectorRegistry, Gauge, gen
 from starlette.responses import Response
 
 from app.core.config import get_application_settings
+from app.core.logging import get_logger, setup_logging
+
+# Initialize logging on module load
+setup_logging()
+logger = get_logger(__name__)
 
 
 def create_app() -> FastAPI:
@@ -77,9 +82,11 @@ def create_app() -> FastAPI:
             _ = get_application_settings()
             readiness_gauge.set(1)
             return {"status": "ready"}
-        except Exception:
+        except Exception as e:
+            # Log the exception for debugging in production
+            logger.error(f"Readiness check failed: {e}", exc_info=True)
             readiness_gauge.set(0)
-            return {"status": "not_ready"}
+            return {"status": "not_ready", "error": str(type(e).__name__)}
 
     @app.get("/metrics", tags=["ops"])  # Prometheus exposition
     def metrics() -> Response:
