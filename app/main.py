@@ -91,9 +91,12 @@ def create_app() -> FastAPI:
         data = generate_latest(registry)
         return Response(content=data, media_type=CONTENT_TYPE_LATEST)
 
-    # In later tickets, include API routers here (e.g., auth, admin, etc.)
-    # from app.api.v1.routes import api_router
-    # app.include_router(api_router, prefix="/api/v1")
+    # Include API routers
+    from app.api.v1.routes import api_router
+    from app.api.v1.auth import router as auth_router
+
+    app.include_router(auth_router, prefix="/api/v1")
+    app.include_router(api_router, prefix="/api/v1")
 
     return app
 
