@@ -11,12 +11,16 @@ Notes:
 
 from __future__ import annotations
 
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
 
 from app.core.redis_client import get_redis_client
-from app.core.security import create_access_token, create_refresh_token, verify_token
+from app.core.security import create_access_token, create_refresh_token, get_jwt_settings, verify_token
+
+logger = logging.getLogger(__name__)
 
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -46,9 +50,12 @@ def issue_token(form_data: OAuth2PasswordRequestForm = Depends()) -> TokenRespon
     if r is not None:
         # Store refresh token with TTL for blacklisting/rotation
         try:
-            r.setex(f"refresh:{subject}:{refresh}", 7 * 24 * 3600, "1")
-        except Exception:
+            jwt_settings = get_jwt_settings()
+            ttl_seconds = jwt_settings.refresh_token_days * 24 * 3600
+            r.setex(f"refresh:{subject}:{refresh}", ttl_seconds, "1")
+        except Exception as e:
             # Do not block token issuance if Redis is unavailable
+            logger.warning(f"Redis operation failed during token issuance: {e}")
             pass
 
     return TokenResponse(access_token=access, refresh_token=refresh)
@@ -75,8 +82,9 @@ def refresh_token(payload: RefreshRequest) -> TokenResponse:
                 raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="refresh_token_revoked")
         except HTTPException:
             raise
-        except Exception:
+        except Exception as e:
             # On Redis failure, proceed with stateless validation only
+            logger.warning(f"Redis operation failed during refresh validation: {e}")
             pass
 
     new_access = create_access_token(subject)
@@ -84,10 +92,13 @@ def refresh_token(payload: RefreshRequest) -> TokenResponse:
 
     if r is not None:
         try:
-            # Rotate refresh: revoke old, store new
+            # Rotate refresh: store new first, then revoke old (safer order)
+            jwt_settings = get_jwt_settings()
+            ttl_seconds = jwt_settings.refresh_token_days * 24 * 3600
+            r.setex(f"refresh:{subject}:{new_refresh}", ttl_seconds, "1")
             r.delete(f"refresh:{subject}:{payload.refresh_token}")
-            r.setex(f"refresh:{subject}:{new_refresh}", 7 * 24 * 3600, "1")
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Redis operation failed during token rotation: {e}")
             pass
 
     return TokenResponse(access_token=new_access, refresh_token=new_refresh)
