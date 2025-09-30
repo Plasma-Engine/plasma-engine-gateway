@@ -7,7 +7,7 @@ permission based on roles embedded in the JWT access token.
 
 from __future__ import annotations
 
-from typing import Iterable
+from typing import Iterable, Optional
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -37,7 +37,7 @@ def require_permission(permission: str):
 
     def _dep(
         user_id: str = Depends(get_current_user),
-        creds: HTTPAuthorizationCredentials | None = Depends(HTTPBearer(auto_error=False)),
+        creds: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False)),
     ) -> None:
         # We need roles; re-verify the token to extract claims (already verified by bearer dep)
         if creds is None:

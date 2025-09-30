@@ -5,6 +5,7 @@ Reusable dependencies: current user extraction and rate limiting.
 from __future__ import annotations
 
 import time
+import threading
 from typing import Optional
 
 from fastapi import Depends, HTTPException, Request, status
@@ -50,13 +51,15 @@ def rate_limit(request: Request, user_id: str = Depends(get_current_user)) -> No
             # Fall back to in-memory on Redis errors
             pass
 
-    # In-memory fallback
-    store = getattr(request.app.state, "_rate_store", None)
-    if store is None:
-        store = {}
-        request.app.state._rate_store = store
-    count = store.get(key, 0) + 1
-    store[key] = count
-    if count > 60:
-        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="rate_limited")
+    # In-memory fallback with thread safety
+    if not hasattr(request.app.state, "_rate_store"):
+        request.app.state._rate_store = {}
+        request.app.state._rate_lock = threading.Lock()
+    
+    with request.app.state._rate_lock:
+        store = request.app.state._rate_store
+        count = store.get(key, 0) + 1
+        store[key] = count
+        if count > 60:
+            raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="rate_limited")
 

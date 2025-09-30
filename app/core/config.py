@@ -6,8 +6,11 @@ intentionally small to keep the boot path minimal and deterministic for
 operational probes.
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 import os
+from typing import Optional
 
 
 @dataclass(frozen=True)
@@ -19,7 +22,7 @@ class ApplicationSettings:
     debug: bool
 
 
-def _str_to_bool(value: str | None, *, default: bool = False) -> bool:
+def _str_to_bool(value: Optional[str], *, default: bool = False) -> bool:
     if value is None:
         return default
     return value.strip().lower() in {"1", "true", "yes", "y", "on"}

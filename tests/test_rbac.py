@@ -14,7 +14,7 @@ def test_admin_users_requires_permission():
     # Viewer token should be forbidden
     resp = client.post(
         "/api/v1/auth/token",
-        data={"username": "alice", "password": "pw"},
+        data={"username": "user", "password": "user123"},
         headers={"Content-Type": "application/x-www-form-urlencoded"},
     )
     token = resp.json()["access_token"]
@@ -24,7 +24,7 @@ def test_admin_users_requires_permission():
     # Admin token should pass
     resp2 = client.post(
         "/api/v1/auth/token",
-        data={"username": "admin", "password": "pw"},
+        data={"username": "admin", "password": "admin123"},
         headers={"Content-Type": "application/x-www-form-urlencoded"},
     )
     token2 = resp2.json()["access_token"]
