@@ -69,7 +69,7 @@ def _get_verification_key(settings: JwtSettings) -> str:
 
 def create_access_token(subject: str, extra_claims: Optional[Dict[str, Any]] = None) -> str:
     settings = get_jwt_settings()
-    now = dt.datetime.utcnow()
+    now = dt.datetime.now(dt.timezone.utc)
     exp = now + dt.timedelta(minutes=settings.access_token_minutes)
     claims: Dict[str, Any] = {
         "sub": subject,
@@ -87,7 +87,7 @@ def create_access_token(subject: str, extra_claims: Optional[Dict[str, Any]] = N
 
 def create_refresh_token(subject: str) -> str:
     settings = get_jwt_settings()
-    now = dt.datetime.utcnow()
+    now = dt.datetime.now(dt.timezone.utc)
     exp = now + dt.timedelta(days=settings.refresh_token_days)
     claims: Dict[str, Any] = {
         "sub": subject,
